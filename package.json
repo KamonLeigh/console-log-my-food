@@ -2,5 +2,8 @@
   "name": "console-log-my-food",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.19.2"
+  }
 }
