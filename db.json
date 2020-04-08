@@ -136,6 +136,27 @@
             "servingSize": " 4",
             "calories": 920
           }
+        },
+        {
+          "1586354146807": {
+            "food": "apple",
+            "servingSize": "0.5",
+            "calories": 0
+          }
+        },
+        {
+          "1586354160893": {
+            "food": "apple",
+            "servingSize": " 1",
+            "calories": 88
+          }
+        },
+        {
+          "1586354189775": {
+            "food": "oreos",
+            "servingSize": " 4",
+            "calories": 920
+          }
         }
       ]
     }

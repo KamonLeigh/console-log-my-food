@@ -20,38 +20,31 @@ readline.on('line', async (line) => {
         case 'list vegan foods':
             {
 
-                axios.get(`http://localhost:3001/food`).then(({ data }) => {
-                    let idx = 0;
+                const { data } =  await axios.get(`http://localhost:3001/food`);
 
-                    const veganOnly = data.filter(food => {
-                        return food.dietary_preferences.includes('vegan')
-                    })
-                    const veganIterable = {
-                        [Symbol.iterator]() {
-                            return {
-                                [Symbol.iterator](){ return this;},
-                                next() {
-                                    const current = veganOnly[idx];
-                                    idx++
+                function* listVeganFoods() {
+                     let idx = 0;
 
-                                    if(current) {
-                                        return { value: current, done: false}
-                                    } else {
-                                        return { value: current, done: true}
-                                    }
-                                }
-                            }
-                        }
-                    }
+                     const veganOnly = data.filter(food => {
+                         return food.dietary_preferences.includes('vegan')
+                     });
+
+                     while(veganOnly[idx]){
+                         yield veganOnly[idx]
+                         idx++
+                     }
+                }
+                   
+                    
 
                    
-                    for (let val of veganIterable) {
+                    for (let val of listVeganFoods()) {
                 
                         console.log(val.name);
                     }
                 
                     readline.prompt()
-            });
+            
 
             }
             break;
@@ -60,34 +53,12 @@ readline.on('line', async (line) => {
             const it = data[Symbol.iterator]();
             let actionIt;
 
-            const actionIterator = {
-                [Symbol.iterator]() { 
-                   let positions = [...this.actions];
-                    return {
-                        [Symbol.iterator]() { return this },
-                        next(...args) {
-                            if (positions.length > 0) {
-                                const position = positions.shift();
-                                const result = position(...args);
-                    
-                                return { value: result, done: false}
-                            } else {
-                                return { done: true}
-                            }
-                        },
-                        return() {
-                            positions = [];
-                            return { done: true}
-                        },
-                        throw(error) {
-                            console.log(error);
-                            return { value: undefind, done: true}
-                        }
-                    }
-                },
-                actions: [askForServingSize, displayCalories]
-
-            };
+            function* actionGenerator() {
+                const food = yield;
+                const servingSize = yield askForServingSize();
+                yield displayCalories(servingSize, food);
+            }
+                       
 
             function askForServingSize(food) {
                 readline.question('How many servings did you eat? (as a decimal: 1, 0.5, 1.2 etc)', servingSize => {
@@ -97,7 +68,7 @@ readline.on('line', async (line) => {
 
                     } else {
 
-                        actionIt.next(servingSize, food)
+                        actionIt.next(servingSize)
                     }
                     
                 })
@@ -150,7 +121,8 @@ readline.on('line', async (line) => {
                     console.log(
                       `${item} has ${position.value.calories} calories`
                     );
-                    actionIt = actionIterator[Symbol.iterator]();
+                    actionIt = actionGenerator();
+                    actionIt.next()
                     actionIt.next(position.value);
                   }
                   position = it.next();
