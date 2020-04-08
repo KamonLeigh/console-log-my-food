@@ -23,6 +23,8 @@ readline.on('line', async (line) => {
                 const { data } =  await axios.get(`http://localhost:3001/food`);
 
                 function* listVeganFoods() {
+
+                    try {
                      let idx = 0;
 
                      const veganOnly = data.filter(food => {
@@ -33,11 +35,12 @@ readline.on('line', async (line) => {
                          yield veganOnly[idx]
                          idx++
                      }
+                    } catch(error) {
+                        console.log('Something went wrong with lisiting vegan item', {error});
+                    }
                 }
                    
-                    
-
-                   
+                           
                     for (let val of listVeganFoods()) {
                 
                         console.log(val.name);
@@ -54,9 +57,14 @@ readline.on('line', async (line) => {
             let actionIt;
 
             function* actionGenerator() {
-                const food = yield;
-                const servingSize = yield askForServingSize();
-                yield displayCalories(servingSize, food);
+                try {
+                    const food = yield;
+                    const servingSize = yield askForServingSize();
+                    yield displayCalories(servingSize, food);
+
+                } catch({ error}) {
+                    console.log(error)
+                }
             }
                        
 
@@ -66,7 +74,9 @@ readline.on('line', async (line) => {
 
                         actionIt.return();
 
-                    } else {
+                    } else if (typeof servingSize !== 'number' || servingSize === NaN) {
+                        actionIt.throw('Please, numbers only');
+                    } else  {
 
                         actionIt.next(servingSize)
                     }
@@ -132,12 +142,66 @@ readline.on('line', async (line) => {
               });
 
               break;
+              case `today's log`:
+                  readline.question('Email', async (emailAddress) => {
+                      const { data } = await axios.get(`http://localhost:3001/users?email=${emailAddress}`);
+
+                      const foodLog = data[0].log || [];
+
+                      function* getFoodLog() {
+                          try {
+                              yield* foodLog;
+
+                          } catch(error) {
+                              console.log('Error reading the food log', { error })
+                          }
+                      }
+
+                      let totalCalories = 0;
+
+                      const logIterator = getFoodLog()
+                      for( const entry of logIterator) {
+                          const timeStamp = Object.keys(entry)[0];
+
+                          if( isToday(new Date(Number(timeStamp)))) {
+                              console.log(
+                                  `${entry[timeStamp].food}, ${entry[timeStamp].servingSize} servings`
+                              )
+
+                              totalCalories += entry[timeStamp].calories;
+
+                              if(totalCalories >= 12000) {
+                                  console.log(`Impressive! You've reached 12,000 calories`);
+                                  logIterator.return();
+                              }
+                          }
+                      }
+
+                      console.log('-------------------------------------');
+                      console.log(`Total Calories: ${totalCalories}`);
+
+                      readline.prompt();
+
+
+                  })
+
+              break;
         }
     
 
 readline.prompt();
 })
 
+
+function isToday(timeStamp) {
+    const today = new Date();
+
+    return (
+        timeStamp.getDate() === today.getDate() &&
+        timeStamp.getMonth() === today.getMonth() &&
+        timeStamp.getFullYear() === today.getFullYear()
+    )
+}
 
 
 

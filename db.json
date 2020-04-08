@@ -141,7 +141,7 @@
           "1586354146807": {
             "food": "apple",
             "servingSize": "0.5",
-            "calories": 0
+            "calories": 12000
           }
         },
         {
@@ -157,8 +157,8 @@
             "servingSize": " 4",
             "calories": 920
           }
-        }
-      ]
+        },
+    
     }
   ]
 }
